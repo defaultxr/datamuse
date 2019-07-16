@@ -1,0 +1,17 @@
+#+TITLE datamuse
+
+A library wrapping version 1.1 of the [[https://www.datamuse.com/api/][Datamuse API]].
+
+From the Datamuse site:
+
+#+BEGIN_QUOTE
+The Datamuse API is a word-finding query engine for developers. You can use it in your apps to find words that match a given set of constraints and that are likely in a given context. You can specify a wide variety of constraints on meaning, spelling, sound, and vocabulary in your queries, in any combination.
+
+The API gives you programmatic access to most of the functionality of Datamuse's websites, including OneLook, RhymeZone, Rimar.io, and WikSearch.
+#+END_QUOTE
+
+Datamuse very generously allows up to 100000 queries per day without an API key. Thus no setup is needed for this library. Just ~quickload~ it and go! :)
+
+* Similar libraries
+
+- [[https://github.com/phoe/wordnet][wordnet]]
