@@ -4,7 +4,7 @@
   :description "Common Lisp library for accessing the Datamuse word-finding API"
   :author "modula t."
   :license "MIT"
-  :version "0.1"
+  :version "1.0"
   :depends-on (#:alexandria
                #:drakma
                #:yason)

@@ -4,4 +4,6 @@
   (:use #:cl)
   (:export #:+words-query-parameters+
            #:words
-           #:words*))
+           #:words*
+           #:suggestions
+           #:suggestions*))
