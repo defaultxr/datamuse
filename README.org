@@ -1,6 +1,6 @@
 #+TITLE: datamuse
 
-A library wrapping version 1.1 of the [[https://www.datamuse.com/api/][Datamuse API]].
+A Common Lisp library wrapping version 1.1 of the [[https://www.datamuse.com/api/][Datamuse API]].
 
 From the Datamuse site:
 
@@ -22,9 +22,11 @@ Datamuse very generously allows up to 100,000 queries per day without an API key
 
 - function ~suggestions*~ - Get a list of suggestions to a query string and their metadata
 
+- function ~parameter-documentation~ - Get the documentation string for the specified parameter to ~words~ / ~words*~.
+
 - symbol ~+words-query-parameters+~ - Alist mapping ~words~ and ~words*~ parameter names to the equivalent parameter name in Datamuse's API
 
-Please see the docstrings for each symbol and the [[http://www.datamuse.com/api/][Datamuse API documentation]] for more information.
+Please see the docstrings for each symbol, the ~parameter-documentation~ function, and the [[http://www.datamuse.com/api/][Datamuse API documentation]] for more information.
 
 * Similar libraries
 

@@ -1,8 +1,10 @@
 ;;;; package.lisp
 
 (defpackage #:datamuse
-  (:use #:cl)
+  (:use #:cl
+        #:alexandria)
   (:export #:+words-query-parameters+
+           #:parameter-documentation
            #:words
            #:words*
            #:suggestions
