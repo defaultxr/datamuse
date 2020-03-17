@@ -117,23 +117,6 @@ See also: `words', `suggestions*'."
             (cdr (assoc "word" x :test #'string-equal)))
           (suggestions* string :max max :vocabulary vocabulary)))
 
-;; make slime/swank show the "correct" argument list instead of just &rest
-#+swank
-(flet ((arglist (args)
-         (swank::make-arglist
-          :key-p t
-          :keyword-args (loop :for param :in args
-                           :collect (swank::make-keyword-arg (make-keyword param) param nil)))))
-  (let* ((arglist (mapcar 'car +words-query-parameters+))
-         ;; `words' doesn't include metadata, so we remove metadata-related arguments to avoid user confusion.
-         (words-arglist (make-arglist (reverse (set-difference arglist (list
-                                                                        'with-definitions
-                                                                        'with-parts-of-speech
-                                                                        'with-syllable-count
-                                                                        'with-pronunciation
-                                                                        'with-frequency)))))
-         (words*-arglist (arglist arglist)))
-    (defmethod swank::compute-enriched-decoded-arglist ((operator-form (eql 'words)) argument-forms)
-      words-arglist)
-    (defmethod swank::compute-enriched-decoded-arglist ((operator-form (eql 'words*)) argument-forms)
-      words*-arglist)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (when (featurep :swank)
+    (load (asdf:system-relative-pathname :datamuse "swank-extensions.lisp"))))

@@ -10,4 +10,6 @@
                #:yason)
   :serial t
   :components ((:file "package")
-               (:file "datamuse")))
+               (:file "datamuse")
+               ;; swank-extensions.lisp conditionally loaded at the end of datamuse.lisp
+               ))
