@@ -5,7 +5,7 @@
   :description "Common Lisp library for accessing the Datamuse word-finding API"
   :author "modula t."
   :license "MIT"
-  :version "1.1"
+  :version "1.2"
   :homepage "https://github.com/defaultxr/datamuse"
   :bug-tracker "https://github.com/defaultxr/datamuse/issues"
   :mailto "defaultxr at gmail dot com"
@@ -15,6 +15,4 @@
                #:yason)
   :serial t
   :components ((:file "package")
-               (:file "datamuse")
-               ;; swank-extensions.lisp conditionally loaded at the end of datamuse.lisp
-               ))
+               (:file "datamuse")))

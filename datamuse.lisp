@@ -47,43 +47,60 @@ See also: `parameter-documentation', `words', `words*'")
 See also: `+words-query-parameters+', `words', `words*'"
   (cadddr (find-if (lambda (x) (position parameter x :test #'string-equal)) +words-query-parameters+)))
 
-(defun words* (&rest parameters)
-  "Get a list of results matching the query specified, including the metadata for each. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
+(macrolet ((defun-words (name rest-keyword &body body)
+               "Define a words function with the paramters in `+words-query-parameters+' as keyword arguments."
+             (let* ((keys (mapcar #'car +words-query-parameters+))
+                    ;; `words' doesn't include with-* arguments, so we remove them.
+                    (keys (if (eql name 'words)
+                              (remove-if (lambda (key)
+                                           (ignore-errors
+                                            (string-equal key 'with- :start1 0 :end1 5)))
+                                         keys)
+                              keys)))
+               (multiple-value-bind (body decls docstring) (parse-body body :documentation t)
+                 `(defun ,name (&rest ,rest-keyword &key ,@keys)
+                    ,@(when docstring (list docstring))
+                    (declare (ignorable ,@keys))
+                    ,@(when decls (list decls))
+                    ,@body)))))
+
+  (defun-words words* parameters
+    "Get a list of results matching the query specified, including the metadata for each. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
 
 Note that the with-* parameters are simply boolean toggles that set whether specific metadata is included in the results; they don't actually change which results are returned.
 
 This function includes all of the data returned by the API as alists (i.e. including various metadata for each result). If you just want a list of the words themselves, use `words'.
 
 See also: `words', `parameter-documentation', `+words-query-parameters+', `suggestions'."
-  (yason:parse
-   (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
-     (drakma:http-request "https://api.datamuse.com/words"
-                          :parameters (loop :for (param value) :on parameters :by #'cddr
-                                         :for lookup = (assoc param +words-query-parameters+ :test 'string=)
-                                         :if (caddr lookup)
-                                         :collect (caddr lookup) :into md
-                                         :else
-                                         :collect (cons (cadr lookup) value) :into result
-                                         :finally (return (append result (when md (list (cons "md" (apply 'concatenate 'string md)))))))))
-   :object-as :alist))
+    (yason:parse
+     (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
+       (drakma:http-request "https://api.datamuse.com/words"
+                            :parameters (loop :for (param value) :on parameters :by #'cddr
+                                              :for lookup := (assoc param +words-query-parameters+ :test 'string=)
+                                              :if (caddr lookup)
+                                                :collect (caddr lookup) :into md
+                                              :else
+                                                :collect (cons (cadr lookup) value) :into result
+                                              :finally (return (append result (when md (list (cons "md" (apply 'concatenate 'string md)))))))))
+     :object-as :alist))
 
-(defun words (&rest parameters)
-  "Get a list of words matching the query specified. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
+  (defun-words words parameters
+    "Get a list of words matching the query specified. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
 
 Note that this function returns just a list of words. To get the full results which include the metadata, use `words*'.
 
 Examples:
 
-;; Get a list of words that rhyme with \"foobar\":
+;; ;; Get a list of words that rhyme with \"foobar\":
 ;; (words :rhymes \"foobar\")
 
-;; Get a list of words that start with \"s\" and end with \"ing\":
+;; ;; Get a list of words that start with \"s\" and end with \"ing\":
 ;; (words :spelling \"s*ing\")
 
 See also: `words*', `parameter-documentation', `+words-query-parameters+', `suggestions'."
-  (mapcar (lambda (x)
-            (cdr (assoc "word" x :test #'string-equal)))
-          (apply 'words* parameters)))
+    (mapcar (lambda (x)
+              (cdr (assoc "word" x :test #'string-equal)))
+            (apply 'words* parameters))))
 
 (defun suggestions* (string &key (max 10) vocabulary)
   "Performs a query to the Datamuse API's /sug endpoint as described at https://www.datamuse.com/api/ , to get a list of suggestions to partially-typed queries, similar to the auto-suggest feature of some search engines.
@@ -116,7 +133,3 @@ See also: `words', `suggestions*'."
   (mapcar (lambda (x)
             (cdr (assoc "word" x :test #'string-equal)))
           (suggestions* string :max max :vocabulary vocabulary)))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (when (featurep :swank)
-    (load (asdf:system-relative-pathname :datamuse "swank-extensions.lisp"))))
