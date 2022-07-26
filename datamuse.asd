@@ -1,6 +1,6 @@
 ;;;; datamuse.asd
 
-(asdf:defsystem #:datamuse
+(defsystem #:datamuse
   :name "datamuse"
   :description "Common Lisp library for accessing the Datamuse word-finding API"
   :author "modula t."
