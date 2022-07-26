@@ -10,24 +10,24 @@ The Datamuse API is a word-finding query engine for developers. You can use it i
 The API gives you programmatic access to most of the functionality of Datamuse's websites, including OneLook, RhymeZone, Rimar.io, and WikSearch.
 #+END_QUOTE
 
-Datamuse very generously allows up to 100,000 queries per day without an API key. Thus no setup is needed for this library. Just ~quickload~ it and go! :)
+Datamuse very generously allows up to 100,000 queries per day without an API key. Thus no setup is needed for this library--just ~quickload~ it and go! :)
 
 * Exported symbols
 
-- function ~words~ - Get a list of words matching a query
+- function ~words~ - Get a list of words matching a query.
 
-- function ~words*~ - Get a list of words and their metadata matching a query
+- function ~words*~ - Get a list of words and their metadata matching a query.
 
-- function ~suggestions~ - Get a list of suggestions to a query string
+- function ~suggestions~ - Get a list of suggestions to a query string.
 
-- function ~suggestions*~ - Get a list of suggestions to a query string and their metadata
+- function ~suggestions*~ - Get a list of suggestions to a query string and their metadata.
 
 - function ~parameter-documentation~ - Get the documentation string for the specified parameter to ~words~ / ~words*~.
 
-- symbol ~+words-query-parameters+~ - Alist mapping ~words~ and ~words*~ parameter names to the equivalent parameter name in Datamuse's API
+- symbol ~+words-query-parameters+~ - Alist mapping ~words~ and ~words*~ parameter names to the equivalent parameter name in Datamuse's API.
 
 Please see the docstrings for each symbol, the ~parameter-documentation~ function, and the [[http://www.datamuse.com/api/][Datamuse API documentation]] for more information.
 
 * Similar libraries
 
-- [[https://github.com/phoe/wordnet][wordnet]]
+- [[https://github.com/phoe/wordnet][wordnet]] - Lisp interface to the lexicographic database [[https://wordnet.princeton.edu/][WordNet]].
