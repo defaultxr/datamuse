@@ -80,7 +80,11 @@ See also: `words', `parameter-documentation', `+words-query-parameters+', `sugge
                                               :if (caddr lookup)
                                                 :collect (caddr lookup) :into md
                                               :else
-                                                :collect (cons (cadr lookup) value) :into result
+                                                :collect (cons (cadr lookup)
+                                                               (if (numberp value)
+                                                                   (write-to-string value) ; for :maximum, :with-syllable-count, etc.
+                                                                   value))
+                                                  :into result
                                               :finally (return (append result (when md (list (cons "md" (apply 'concatenate 'string md)))))))))
      :object-as :alist))
 
