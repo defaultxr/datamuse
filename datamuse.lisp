@@ -45,11 +45,13 @@ See also: `parameter-documentation', `words', `words*'")
   "Get the documentation string for the specified parameter of the `words' function.
 
 See also: `+words-query-parameters+', `words', `words*'"
-  (cadddr (find-if (lambda (x) (position parameter x :test #'string-equal)) +words-query-parameters+)))
+  (fourth (find-if (lambda (x)
+                     (position parameter x :test #'string-equal))
+                   +words-query-parameters+)))
 
 (macrolet ((defun-words (name rest-keyword &body body)
-               "Define a words function with the paramters in `+words-query-parameters+' as keyword arguments."
-             (let* ((keys (mapcar #'car +words-query-parameters+))
+             "Define a words function with the paramters in `+words-query-parameters+' as keyword arguments."
+             (let* ((keys (mapcar #'first +words-query-parameters+))
                     ;; `words' doesn't include with-* arguments, so we remove them.
                     (keys (if (eql name 'words)
                               (remove-if (lambda (key)
@@ -76,16 +78,16 @@ See also: `words', `parameter-documentation', `+words-query-parameters+', `sugge
      (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
        (drakma:http-request "https://api.datamuse.com/words"
                             :parameters (loop :for (param value) :on parameters :by #'cddr
-                                              :for lookup := (assoc param +words-query-parameters+ :test 'string=)
-                                              :if (caddr lookup)
-                                                :collect (caddr lookup) :into md
+                                              :for lookup := (assoc param +words-query-parameters+ :test #'string=)
+                                              :if (third lookup)
+                                                :collect (third lookup) :into md
                                               :else
-                                                :collect (cons (cadr lookup)
+                                                :collect (cons (second lookup)
                                                                (if (numberp value)
                                                                    (write-to-string value) ; for :maximum, :with-syllable-count, etc.
                                                                    value))
                                                   :into result
-                                              :finally (return (append result (when md (list (cons "md" (apply 'concatenate 'string md)))))))))
+                                              :finally (return (append result (when md (list (cons "md" (apply #'concatenate 'string md)))))))))
      :object-as :alist))
 
   (defun-words words parameters
@@ -104,7 +106,7 @@ Examples:
 See also: `words*', `parameter-documentation', `+words-query-parameters+', `suggestions'."
     (mapcar (lambda (x)
               (cdr (assoc "word" x :test #'string-equal)))
-            (apply 'words* parameters))))
+            (apply #'words* parameters))))
 
 (defun suggestions* (string &key (max 10) vocabulary)
   "Performs a query to the Datamuse API's /sug endpoint as described at https://www.datamuse.com/api/ , to get a list of suggestions to partially-typed queries, similar to the auto-suggest feature of some search engines.
@@ -115,12 +117,10 @@ See also: `suggestions', `words'."
   (yason:parse
    (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
      (drakma:http-request "https://api.datamuse.com/sug"
-                          :parameters (append
-                                       (list
-                                        (cons "s" string)
-                                        (cons "max" (write-to-string max)))
-                                       (when vocabulary
-                                         (cons "v" vocabulary)))))
+                          :parameters (list* (cons "s" string)
+                                             (cons "max" (write-to-string max))
+                                             (when vocabulary
+                                               (cons "v" vocabulary)))))
    :object-as :alist))
 
 (defun suggestions (string &key (max 10) vocabulary)
