@@ -4,8 +4,7 @@
 (in-package #:datamuse)
 
 (define-constant +words-query-parameters+
-    '((meaning "ml" nil "Means like constraint: require that the results have a meaning related to this string value, which can be any word or sequence of words. (This is effectively the reverse dictionary feature of OneLook.)
-")
+    '((meaning "ml" nil "Means like constraint: require that the results have a meaning related to this string value, which can be any word or sequence of words. (This is effectively the reverse dictionary feature of OneLook.)")
       (sound "sl" nil "Sounds like constraint: require that the results are pronounced similarly to this string of characters. (If the string of characters doesn't have a known pronunciation, the system will make its best guess using a text-to-phonemes algorithm.)")
       (spelling "sp" nil "Spelled like constraint: require that the results are spelled similarly to this string of characters, or that they match this wildcard pattern. A pattern can include any combination of alphanumeric characters, spaces, and two reserved characters that represent placeholders — * (which matches any number of characters) and ? (which matches exactly one character).")
       (popular-adjectives "rel_jja" nil "Popular nouns modified by the given adjective, per Google Books Ngrams. i.e. gradual → increase")
