@@ -103,9 +103,9 @@ Examples:
 ;; (words :spelling \"s*ing\")
 
 See also: `words*', `parameter-documentation', `+words-query-parameters+', `suggestions'."
-    (mapcar (lambda (x)
-              (cdr (assoc "word" x :test #'string-equal)))
-            (apply #'words* parameters))))
+  (mapcar (lambda (x)
+            (cdr (assoc "word" x :test #'string-equal)))
+          (apply #'words* parameters)))
 
 (defun suggestions* (string &key (max 10) vocabulary)
   "Performs a query to the Datamuse API's /sug endpoint as described at https://www.datamuse.com/api/ , to get a list of suggestions to partially-typed queries, similar to the auto-suggest feature of some search engines.

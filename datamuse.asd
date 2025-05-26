@@ -8,7 +8,7 @@
   :version "1.2"
   :homepage "https://github.com/defaultxr/datamuse"
   :bug-tracker "https://github.com/defaultxr/datamuse/issues"
-  :mailto "defaultxr at gmail dot com"
+  :mailto "modula-t at pm dot me"
   :source-control (:git "git@github.com:defaultxr/datamuse.git")
   :depends-on (#:alexandria
                #:drakma
