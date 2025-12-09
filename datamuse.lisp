@@ -26,7 +26,7 @@
       (topics "topics" nil "Topic words: An optional hint to the system about the theme of the document being written. Results will be skewed toward these topics. At most 5 words can be specified. Space or comma delimited. Nouns work best.")
       (left-context "lc" nil "Left context: An optional hint to the system about the word that appears immediately to the left of the target word in a sentence. (At this time, only a single word may be specified.)")
       (right-context "rc" nil "Right context: An optional hint to the system about the word that appears immediately to the right of the target word in a sentence. (At this time, only a single word may be specified.)")
-      (maximum "max" nil "Maximum number of results to return, not to exceed 1000. (default: 100)")
+      (maximum "max" nil "Maximum number of results to return, not to exceed 1000. (default: 100)" 100)
       (with-definitions "md" "d" "Include definitions in the results. The definitions are from WordNet. If the word is an inflected form (such as the plural of a noun or a conjugated form of a verb), then an additional defHeadword field will be added indicating the base form from which the definitions are drawn.")
       (with-parts-of-speech "md" "p" "Include parts of speech in the results. \"n\" means noun, \"v\" means verb, \"adj\" means adjective, \"adv\" means adverb, and \"u\" means that the part of speech is none of these or cannot be determined. Multiple entries will be added when the word's part of speech is ambiguous, with the most popular part of speech listed first. This field is derived from an analysis of Google Books Ngrams data.")
       (with-syllable-count "md" "s" "Include syllable count in the results. In certain cases the number of syllables may be ambiguous, in which case the system's best guess is chosen based on the entire query.")
@@ -40,59 +40,79 @@ See https://www.datamuse.com/api/ for more information about the API.
 
 See also: `parameter-documentation', `words', `words*'")
 
-(defun parameter-documentation (parameter)
-  "Get the documentation string for the specified parameter of the `words' function.
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun parameter-data (parameter)
+    "Get the list of data for a `words' query parameter.
+
+See also: `parameter-documentation', `+words-query-parameters+'"
+    (find-if (lambda (x)
+               (or (string-equal parameter (first x))
+                   (string-equal parameter (second x))))
+             +words-query-parameters+))
+
+  (defun parameter-documentation (parameter)
+    "Get the documentation string for the specified parameter of the `words' function.
 
 See also: `+words-query-parameters+', `words', `words*'"
-  (fourth (find-if (lambda (x)
-                     (position parameter x :test #'string-equal))
-                   +words-query-parameters+)))
+    (fourth (parameter-data parameter)))
 
-(macrolet ((defun-words (name rest-keyword &body body)
-             "Define a words function with the paramters in `+words-query-parameters+' as keyword arguments."
-             (let* ((keys (mapcar #'first +words-query-parameters+))
-                    ;; `words' doesn't include with-* arguments, so we remove them.
-                    (keys (if (eql name 'words)
-                              (remove-if (lambda (key)
-                                           (ignore-errors
-                                            (string-equal key 'with- :start1 0 :end1 5)))
-                                         keys)
-                              keys)))
-               (multiple-value-bind (body decls docstring) (parse-body body :documentation t)
-                 `(defun ,name (&rest ,rest-keyword &key ,@keys)
-                    ,@(when docstring (list docstring))
-                    (declare (ignorable ,@keys))
-                    ,@(when decls (list decls))
-                    ,@body)))))
+  (defun parameter-default (parameter)
+    "Get the default value of the specified parameter of the `words' function.
 
-  (defun-words words* parameters
-    "Get a list of results matching the query specified, including the metadata for each. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
+See also: `parameter-documentation', `+words-query-parameters+', `words', `words*'"
+    (fifth (parameter-data parameter))))
+
+(defmacro defun-words (name rest-keyword &body body)
+  "Define a words function with the paramters in `+words-query-parameters+' as keyword arguments."
+  (let* ((keys (mapcar #'first +words-query-parameters+))
+         ;; `words' doesn't include with-* arguments, so we remove them.
+         (keys (if (eql name 'words)
+                   (remove-if (lambda (key)
+                                (ignore-errors
+                                 (string-equal key 'with- :start1 0 :end1 5)))
+                              keys)
+                   keys))
+         (keys (mapcar (lambda (key)
+                         (if-let ((default (parameter-default key)))
+                           (list key default)
+                           key))
+                       keys)))
+    (print keys)
+    (multiple-value-bind (body decls docstring) (parse-body body :documentation t)
+      `(defun ,name (&rest ,rest-keyword &key ,@keys)
+         ,@(when docstring (list docstring))
+         (declare (ignorable ,@(mapcar #'ensure-car keys)))
+         ,@decls
+         ,@body))))
+
+(defun-words words* parameters
+  "Get a list of results matching the query specified, including the metadata for each. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
 
 Note that the with-* parameters are simply boolean toggles that set whether specific metadata is included in the results; they don't actually change which results are returned.
 
 This function includes all of the data returned by the API as alists (i.e. including various metadata for each result). If you just want a list of the words themselves, use `words'.
 
 See also: `words', `parameter-documentation', `+words-query-parameters+', `suggestions'."
-    (yason:parse
-     (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
-       (drakma:http-request "https://api.datamuse.com/words"
-                            :parameters (loop :for (param value) :on parameters :by #'cddr
-                                              :for lookup := (assoc param +words-query-parameters+ :test #'string=)
-                                              :if (third lookup)
-                                                :collect (third lookup) :into md
-                                              :else
-                                                :collect (cons (second lookup)
-                                                               (if (numberp value)
-                                                                   (write-to-string value) ; for :maximum, :with-syllable-count, etc.
-                                                                   value))
-                                                  :into result
-                                              :finally (return (append result (when md (list (cons "md" (apply #'concatenate 'string md)))))))))
-     :object-as :alist))
+  (yason:parse
+   (let ((drakma:*text-content-types* '(("application" . "json") ("text"))))
+     (drakma:http-request "https://api.datamuse.com/words"
+                          :parameters (loop :for (param value) :on parameters :by #'cddr
+                                            :for data := (parameter-data param)
+                                            :if (third data)
+                                              :collect (third data) :into md
+                                            :else
+                                              :collect (cons (second data)
+                                                             (if (numberp value)
+                                                                 (write-to-string value) ; for :maximum, :with-syllable-count, etc.
+                                                                 value))
+                                                :into result
+                                            :finally (return (append result (when md (list (cons "md" (apply #'concatenate 'string md)))))))))
+   :object-as :alist))
 
-  (defun-words words parameters
-    "Get a list of words matching the query specified. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
+(defun-words words parameters
+  "Get a list of words matching the query specified. See the `+words-query-parameters+' alist or the `parameter-documentation' function for documentation on each parameter. This function works by performing a query to the Datamuse API's /words endpoint as described at https://www.datamuse.com/api/ .
 
-Note that this function returns just a list of words. To get the full results which include the metadata, use `words*'.
+Note that this function returns just a list of words. To get the full results (including metadata), use `words*'.
 
 Examples:
 
